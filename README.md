@@ -15,10 +15,12 @@
    - `MATH:3800` → `num-methods`
    - `PHYS:1512` → `phys`
    - `SJUS:1001` → `sjus` (else `canvas`)
+   - These are just examples from my use case, use it as a template!
 4. **Deduplicates** — checks `task status:pending export` annotations for `canvas:<UID>` + fuzzy match on `due+project` (e.g., existing `NM HW01 due` ↔ `Homework #1 [MATH:3800]`), merges instead of duplicating
 5. **Syncs to Taskwarrior** — `task add project:<proj> due:<YYYY-MM-DD> +canvas +assignment <title>` + annotations for `UID`, `URL`, description; tracks seen UIDs in `~/.task/canvas_sync_state.json`
-6. **Generates Obsidian** — `!Schedule-Tasks/Canvas_Assignments.md` with frontmatter, sortable table, detail sections, and Dataview block (`WHERE contains(tags,"canvas")`)
-7. **Automates** — `systemd` timer daily at `07:00` + 5 min after boot (`~/.config/systemd/user/canvas-sync.*`)
+   (This is optional btw)
+7. **Generates Obsidian** — `!Schedule-Tasks/Canvas_Assignments.md` with frontmatter, sortable table, detail sections, and Dataview block (`WHERE contains(tags,"canvas")`)
+8. **Automates** — `systemd` timer daily at `07:00` + 5 min after boot (`~/.config/systemd/user/canvas-sync.*`)
 
 All logic is in **one file**: [`canvas_sync.py`](canvas_sync.py) (~400 LOC, stdlib only). `systemd/` timer/service + `install.sh` are included in this repo.
 
