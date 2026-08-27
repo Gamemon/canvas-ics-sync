@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily Canvas sync (07:00 + on boot)
+
+[Timer]
+OnCalendar=07:00
+OnBootSec=5min
+Persistent=true
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target

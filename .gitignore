@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+/tmp/
+.canvas_sync.log
+*.ics
+!timetree.ics

@@ -1,0 +1,19 @@
+[Unit]
+Description=Canvas ICS → Taskwarrior + Obsidian sync
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+# Standalone repo location (clone to ~/canvas-ics-sync)
+ExecStart=/usr/bin/python3 %h/canvas-ics-sync/canvas_sync.py
+# Vault location alternative (if using ObsidianVault vault):
+# ExecStart=/usr/bin/python3 %h/ObsidianVault/scripts/canvas_sync.py
+ExecStartPost=/bin/bash -c 'echo "[canvas-sync] completed at $(date --iso-8601=seconds)" >> %h/canvas-ics-sync/.canvas_sync.log'
+# Also log vault location if vault exists:
+# ExecStartPost=/bin/bash -c 'echo "[canvas-sync] completed at $(date --iso-8601=seconds)" >> %h/ObsidianVault/.canvas_sync.log'
+StandardOutput=append:%h/canvas-ics-sync/.canvas_sync.log
+StandardError=append:%h/canvas-ics-sync/.canvas_sync.log
+
+[Install]
+WantedBy=default.target
