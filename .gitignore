@@ -4,3 +4,4 @@ __pycache__/
 .canvas_sync.log
 *.ics
 !timetree.ics
+config.json

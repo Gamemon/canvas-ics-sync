@@ -1,0 +1,16 @@
+{
+  "_comment": "Copy this file to ~/.config/canvas-ics-sync/config.json and fill in your values. FEED_URL contains your private Canvas calendar-feed token — keep it out of git (config.json is gitignored).",
+  "feed_url": "https://your-institution.instructure.com/feeds/calendars/user_YOUR_FEED_TOKEN.ics",
+  "vault_root": "~/ObsidianVault",
+  "obsidian_out": null,
+  "cache_ics": "/tmp/canvas_feed.ics",
+  "state_file": "~/.task/canvas_sync_state.json",
+  "default_project": "canvas",
+  "project_map": {
+    "CS:3620": "os",
+    "MATH:3800": "num-methods",
+    "PHYS:1512": "phys",
+    "SJUS:1001": "sjus",
+    "SJUS": "sjus"
+  }
+}

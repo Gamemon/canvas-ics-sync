@@ -19,18 +19,59 @@ from pathlib import Path
 import urllib.request
 
 # --- Config ---
-FEED_URL = "https://uiowa.instructure.com/feeds/calendars/user_*.ics"
+# All settings can be overridden via a JSON config file. Lookup order:
+#   1. ~/.config/canvas-ics-sync/config.json
+#   2. <repo>/config.json                          (gitignored)
+#   3. built-in defaults below
+# Copy config.example.json and fill in your values. The feed URL carries your
+# private Canvas calendar-feed token, so keep your real config.json out of git.
+SEARCH_CFG = [
+    Path.home() / ".config" / "canvas-ics-sync" / "config.json",
+    Path(__file__).resolve().parent / "config.json",
+]
+
+def _expand(p):
+    if p is None:
+        return None
+    return Path(str(p).replace("~", str(Path.home())))
+
+def _load_config():
+    cfg = {}
+    # apply in ascending precedence (later files win)
+    for path in SEARCH_CFG:
+        try:
+            with open(path) as fh:
+                data = json.load(fh)
+            if isinstance(data, dict):
+                cfg.update(data)
+        except (OSError, ValueError):
+            pass
+    return cfg
+
+_CONFIG = _load_config()
+
+# Real feed URL must come from config.json (it carries your private Canvas
+# calendar-feed token). The placeholder below only errors clearly if missing.
+FEED_URL = _CONFIG.get("feed_url", "")
+
+# Vault root: config wins, else auto-detect, else repo dir.
 VAULT_ROOT = Path(__file__).resolve().parent
-# Detect vault location: if repo is standalone, try ~/ObsidianVault first, else current dir
-if (Path.home() / "ObsidianVault" / "!Schedule-Tasks").exists():
+_cfg_vault = _expand(_CONFIG.get("vault_root"))
+if _cfg_vault is not None:
+    VAULT_ROOT = _cfg_vault
+elif (Path.home() / "ObsidianVault" / "!Schedule-Tasks").exists():
     VAULT_ROOT = Path.home() / "ObsidianVault"
 elif (Path(__file__).resolve().parent / "!Schedule-Tasks").exists():
     VAULT_ROOT = Path(__file__).resolve().parent
-OBSIDIAN_OUT = VAULT_ROOT / "!Schedule-Tasks" / "Canvas_Assignments.md"
-CACHE_ICS = Path("/tmp/canvas_feed.ics")
-STATE_FILE = Path.home() / ".task" / "canvas_sync_state.json"
 
-PROJECT_MAP = {
+_cfg_out = _expand(_CONFIG.get("obsidian_out"))
+OBSIDIAN_OUT = (_cfg_out if _cfg_out is not None
+                else VAULT_ROOT / "!Schedule-Tasks" / "Canvas_Assignments.md")
+CACHE_ICS = _expand(_CONFIG.get("cache_ics")) or Path("/tmp/canvas_feed.ics")
+STATE_FILE = _expand(_CONFIG.get("state_file")) or Path.home() / ".task" / "canvas_sync_state.json"
+
+_cfg_map = _CONFIG.get("project_map")
+PROJECT_MAP = _cfg_map if isinstance(_cfg_map, dict) else {
     "CS:3620": "os",
     "MATH:3800": "num-methods",
     "PHYS:1512": "phys",
@@ -39,7 +80,7 @@ PROJECT_MAP = {
 }
 
 # Fallback project if no match
-DEFAULT_PROJECT = "canvas"
+DEFAULT_PROJECT = _CONFIG.get("default_project", "canvas")
 
 def fetch_ics(url: str, dest: Path):
     print(f"[*] Fetching {url}")
@@ -462,6 +503,11 @@ def main():
     ics_path = Path(args.ics)
 
     if not args.no_fetch:
+        if not FEED_URL:
+            print("[!] No feed URL configured. Copy config.example.json to "
+                  "~/.config/canvas-ics-sync/config.json and set 'feed_url'.",
+                  file=sys.stderr)
+            sys.exit(1)
         ok = fetch_ics(FEED_URL, ics_path)
         if not ok and not ics_path.exists():
             print("[!] No cached ICS and fetch failed — abort", file=sys.stderr)

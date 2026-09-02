@@ -86,7 +86,7 @@ python3 canvas_sync.py
 ~/ObsidianVault/canvas-ics-sync.sh
 ```
 
-**Config:** edit `FEED_URL` at top of `canvas_sync.py` or set `CANVAS_FEED_URL` env for wrapper. `VAULT_ROOT` auto-detects `~/ObsidianVault`, else current dir.
+**Config:** copy [`config.example.json`](config.example.json) to `~/.config/canvas-ics-sync/config.json` and fill in your values. It overrides the feed URL, vault path, output path, cache/state files, and the course→project map. Your real `config.json` holds your private Canvas calendar-feed token, so it is gitignored — keep it out of the repo. Without a config file the script falls back to its built-in defaults (`FEED_URL`, `VAULT_ROOT` auto-detects `~/ObsidianVault`, else the repo dir).
 
 ---
 
@@ -160,9 +160,9 @@ Recreated on every sync; add personal notes in Taskwarrior or separate Obsidian 
 
 ## Troubleshooting
 
-- **Feed 404/empty**: Canvas feed URL rotated — re-copy from Canvas → Calendar → Calendar Feed, update `FEED_URL`
+- **Feed 404/empty**: Canvas feed URL rotated — re-copy from Canvas → Calendar → Calendar Feed, update `feed_url` in `~/.config/canvas-ics-sync/config.json`
 - **Duplicates**: ensure `task status:pending export` shows annotations `canvas:<UID>`; check `~/.task/canvas_sync_state.json` and `task +canvas list`
-- **Missing Obsidian note**: `VAULT_ROOT` mis-detected — set explicitly in script or run from vault dir
+- **Missing Obsidian note**: `vault_root` mis-detected — set it explicitly in `config.json`
 - **Timer not firing**: `systemctl --user daemon-reload && systemctl --user enable canvas-sync.timer && systemctl --user start canvas-sync.timer`
 
 ---
