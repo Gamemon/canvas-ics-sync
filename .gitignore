@@ -5,3 +5,13 @@ __pycache__/
 *.ics
 !timetree.ics
 config.json
+
+# local Python/dev cruft
+.venv/
+dist/
+*.egg-info/
+
+# editor junk
+.vscode/
+.idea/
+*~

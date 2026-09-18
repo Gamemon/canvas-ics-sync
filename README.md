@@ -18,9 +18,9 @@
    - These are just examples from my use case, use it as a template!
 4. **Deduplicates** — checks `task status:pending export` annotations for `canvas:<UID>` + fuzzy match on `due+project` (e.g., existing `NM HW01 due` ↔ `Homework #1 [MATH:3800]`), merges instead of duplicating
 5. **Syncs to Taskwarrior** — `task add project:<proj> due:<YYYY-MM-DD> +canvas +assignment <title>` + annotations for `UID`, `URL`, description; tracks seen UIDs in `~/.task/canvas_sync_state.json`
-   (This is optional btw)
-7. **Generates Obsidian** — `!Schedule-Tasks/Canvas_Assignments.md` with frontmatter, sortable table, detail sections, and Dataview block (`WHERE contains(tags,"canvas")`)
-8. **Automates** — `systemd` timer daily at `07:00` + 5 min after boot (`~/.config/systemd/user/canvas-sync.*`)
+   (Optional — the Obsidian note works without it)
+6. **Generates Obsidian** — `!Schedule-Tasks/Canvas_Assignments.md` with frontmatter, sortable table, detail sections, and Dataview block (`WHERE contains(tags,"canvas")`)
+7. **Automates** — `systemd` timer daily at `07:00` + 5 min after boot (`~/.config/systemd/user/canvas-sync.*`)
 
 All logic is in **one file**: [`canvas_sync.py`](canvas_sync.py) (~400 LOC, stdlib only). `systemd/` timer/service + `install.sh` are included in this repo.
 
@@ -31,7 +31,9 @@ All logic is in **one file**: [`canvas_sync.py`](canvas_sync.py) (~400 LOC, stdl
 ```
 canvas-ics-sync/                  # ← Gamemon/canvas-ics-sync (this repo)
   canvas_sync.py                  # single-file logic (also copied to ObsidianVault/scripts/)
+  config.example.json             # config template (copy to ~/.config/canvas-ics-sync/config.json)
   README.md
+  LICENSE                         # MIT
   systemd/
     canvas-sync.service           # systemd unit (ExecStart → %h/canvas-ics-sync/canvas_sync.py)
     canvas-sync.timer             # OnCalendar=07:00, OnBootSec=5min, Persistent=true
@@ -86,7 +88,25 @@ python3 canvas_sync.py
 ~/ObsidianVault/canvas-ics-sync.sh
 ```
 
-**Config:** copy [`config.example.json`](config.example.json) to `~/.config/canvas-ics-sync/config.json` and fill in your values. It overrides the feed URL, vault path, output path, cache/state files, and the course→project map. Your real `config.json` holds your private Canvas calendar-feed token, so it is gitignored — keep it out of the repo. Without a config file the script falls back to its built-in defaults (`FEED_URL`, `VAULT_ROOT` auto-detects `~/ObsidianVault`, else the repo dir).
+**No config needed to start:** the script falls back to its built-in defaults. For your own feed URL / course map, see [Configuration](#configuration).
+
+---
+
+## Configuration
+
+Copy [`config.example.json`](config.example.json) to `~/.config/canvas-ics-sync/config.json` (or `config.json` next to the script — both are looked up, the former wins). Every key is optional; missing keys fall back to the built-in defaults.
+
+| Key | Type | Default | Purpose |
+|-----|------|---------|---------|
+| `feed_url` | string | `""` (errors if empty) | Your private Canvas calendar-feed URL (`https://.../feeds/calendars/user_<token>.ics`). **Contains your token — keep the real config out of git.** |
+| `vault_root` | string | `~/ObsidianVault`, else repo dir | Root of the Obsidian vault that receives the generated note |
+| `obsidian_out` | string \| `null` | `<vault>/!Schedule-Tasks/Canvas_Assignments.md` | Output path for the generated note (`null` = default) |
+| `cache_ics` | string | `/tmp/canvas_feed.ics` | Where the fetched `.ics` is cached |
+| `state_file` | string | `~/.task/canvas_sync_state.json` | Dedup state — UIDs already seen |
+| `default_project` | string | `canvas` | Taskwarrior project when no `project_map` entry matches |
+| `project_map` | object | built-in Iowa map | `"COURSE:CODE": "project"` entries; overrides the built-in examples |
+
+Your real `config.json` holds your private Canvas calendar-feed token, so it is gitignored — keep it out of the repo.
 
 ---
 
